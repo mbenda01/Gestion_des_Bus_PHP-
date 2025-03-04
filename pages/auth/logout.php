@@ -1,8 +1,6 @@
-
-// logout.php
 <?php
 session_start();
 session_destroy();
-header("Location: login.php");
+header("Location: /Gestion_des_bus_PHP/pages/auth/login.php");
 exit;
 ?>

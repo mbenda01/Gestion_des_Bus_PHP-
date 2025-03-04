@@ -1,4 +1,3 @@
-// database.php
 <?php
 $serveur = "localhost";
 $user = "root";
