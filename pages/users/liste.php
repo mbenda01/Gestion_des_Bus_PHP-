@@ -1,7 +1,6 @@
 <?php
 require_once dirname(__DIR__, 2) . '/database.php';
 
-// Récupérer tous les utilisateurs
 $users = $connexion->query("SELECT * FROM users");
 ?>
 
@@ -44,6 +43,7 @@ $users = $connexion->query("SELECT * FROM users");
                             Modifier
                         </button>
 
+                        <!-- Bouton Supprimer avec confirmation -->
                         <?php if ($user['role'] !== 'admin'): ?>
                             <a href="index.php?action=deleteUser&id=<?= $user['id'] ?>"
                                class="btn btn-danger btn-sm"
