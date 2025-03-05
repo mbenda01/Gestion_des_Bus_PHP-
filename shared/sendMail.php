@@ -2,26 +2,23 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require dirname(__DIR__) . '/vendor/autoload.php'; // Charger PHPMailer
+require dirname(__DIR__) . '/vendor/autoload.php';
 
 function sendEmail($email, $prenom, $nom, $login, $password) {
     $mail = new PHPMailer(true);
 
     try {
-        // Configurer Mailtrap
         $mail->isSMTP();
         $mail->Host = 'sandbox.smtp.mailtrap.io';
         $mail->SMTPAuth = true;
-        $mail->Username = 'c9c76c1cc22934'; // Ton Mailtrap Username
-        $mail->Password = 'c2f0d4cdac211c'; // Ton Mailtrap Password
-        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS; // Activer TLS
-        $mail->Port = 2525; // Port Mailtrap
+        $mail->Username = 'c9c76c1cc22934';
+        $mail->Password = 'c2f0d4cdac211c';
+        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $mail->Port = 2525;
 
-        // Configurer l'expéditeur et le destinataire
         $mail->setFrom('noreply@gestionbus.com', 'Gestion des Bus');
         $mail->addAddress($email, "$prenom $nom");
 
-        // Contenu de l'email
         $mail->isHTML(true);
         $mail->Subject = 'Bienvenue sur Gestion des Bus - Vos Identifiants';
         $mail->Body = "
@@ -34,7 +31,6 @@ function sendEmail($email, $prenom, $nom, $login, $password) {
             <p>Merci d'utiliser notre plateforme ! 🚍</p>
         ";
 
-        // Envoyer l'email
         $mail->send();
         return true;
     } catch (Exception $e) {
