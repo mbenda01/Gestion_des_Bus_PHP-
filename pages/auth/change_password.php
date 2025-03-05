@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <style>
         body {
-            background-color: #ffffff; /* Fond blanc épuré */
+            background-color: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -101,7 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2 class="text-primary"><i class="fas fa-lock"></i> Changer le mot de passe</h2>
         <p class="text-muted">Assurez-vous de choisir un mot de passe sécurisé.</p>
 
-        <!-- Message d'erreur -->
         <?php if (!empty($error)): ?>
             <div class="alert alert-danger"><?= $error ?></div>
         <?php endif; ?>
@@ -121,10 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </div>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Script pour voir/masquer les mots de passe -->
     <script>
         function togglePassword(id, eyeIcon) {
             let input = document.getElementById(id);

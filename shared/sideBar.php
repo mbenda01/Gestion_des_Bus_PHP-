@@ -19,10 +19,8 @@
             </ul>
         </div>
 
-        <!-- Affichage de la photo de profil et prénom en bas -->
         <div class="text-center mt-3">
             <?php
-            // Vérifier si une image de profil est enregistrée en session
             $profile_image = isset($_SESSION['profile_image']) && !empty($_SESSION['profile_image'])
                 ? "/Gestion_des_Bus_PHP/assets/" . $_SESSION['profile_image']
                 : "/Gestion_des_Bus_PHP/assets/default.png";

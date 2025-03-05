@@ -4,13 +4,11 @@ require_once dirname(__DIR__, 2) . '/database.php';
 
 $error = "";
 
-// Vérifier si l'utilisateur est déjà connecté
 if (isset($_SESSION['user_id'])) {
     header("Location: /Gestion_des_bus_PHP/index.php");
     exit;
 }
 
-// Vérifier si le formulaire a été soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = trim($_POST['login']);
     $password = trim($_POST['password']);
@@ -18,7 +16,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($login) || empty($password)) {
         $error = "Veuillez remplir tous les champs.";
     } else {
-        // Vérifier si l'utilisateur existe
         $stmt = $connexion->prepare("SELECT * FROM users WHERE login = ?");
         $stmt->bind_param("s", $login);
         $stmt->execute();
@@ -28,7 +25,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$user) {
             $error = "Identifiant ou mot de passe incorrect.";
         } else {
-            // Vérifier si le mot de passe est "default"
             if ($user['password'] == 'default') {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['role'] = $user['role'];
@@ -39,7 +35,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            // Vérifier le mot de passe avec password_verify
             if (password_verify($password, $user['password'])) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['role'] = $user['role'];
@@ -47,13 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['profile_image'] = $user['profile_image'] ?? 'default.png';
                 $_SESSION['change_password'] = false;
 
-                // Vérifier si une image de profil est envoyée
                 if (!empty($_FILES['profile_image']['name'])) {
                     $target_dir = dirname(__DIR__, 2) . "/assets/";
                     $file_name = basename($_FILES['profile_image']['name']);
                     $target_file = $target_dir . $file_name;
 
-                    // Vérifier si c'est une image valide
                     $imageFileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
                     $extensions_autorisees = ['jpg', 'jpeg', 'png', 'gif'];
 
@@ -61,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         move_uploaded_file($_FILES['profile_image']['tmp_name'], $target_file);
                         $_SESSION['profile_image'] = $file_name;
 
-                        // Mettre à jour l'image de profil en base de données
                         $stmt = $connexion->prepare("UPDATE users SET profile_image = ? WHERE id = ?");
                         $stmt->bind_param("si", $file_name, $user['id']);
                         $stmt->execute();
@@ -110,7 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <div class="login-container">
     <h2 class="text-center text-primary">🚍 Connexion</h2>
 
-    <!-- Affichage des erreurs -->
     <?php if (!empty($error)): ?>
         <div class="alert alert-danger"><?= $error ?></div>
     <?php endif; ?>

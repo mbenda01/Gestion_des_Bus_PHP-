@@ -13,7 +13,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login = strtolower($prenom . '.' . $nom);
     $password = 'default';
 
-    // Validation serveur
     if (!preg_match("/^[a-zA-ZÀ-ÿ\s]+$/", $prenom)) {
         $error = "Le prénom ne doit contenir que des lettres.";
     } elseif (!preg_match("/^[a-zA-ZÀ-ÿ\s]+$/", $nom)) {

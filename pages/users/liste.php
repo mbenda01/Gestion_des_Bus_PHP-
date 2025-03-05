@@ -44,7 +44,6 @@ $users = $connexion->query("SELECT * FROM users");
                             Modifier
                         </button>
 
-                        <!-- Bouton Supprimer avec confirmation -->
                         <?php if ($user['role'] !== 'admin'): ?>
                             <a href="index.php?action=deleteUser&id=<?= $user['id'] ?>"
                                class="btn btn-danger btn-sm"
@@ -61,7 +60,6 @@ $users = $connexion->query("SELECT * FROM users");
     </table>
 </div>
 
-<!-- Modale de modification d'un utilisateur -->
 <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -105,7 +103,7 @@ $users = $connexion->query("SELECT * FROM users");
     </div>
 </div>
 
-<!-- Script pour gérer la modification -->
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll('.edit-btn').forEach(button => {

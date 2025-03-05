@@ -2,13 +2,11 @@
 session_start();
 require_once 'database.php';
 
-// Vérifier si l'utilisateur est connecté, sinon rediriger vers login.php
 if (!isset($_SESSION['user_id'])) {
     header("Location: pages/auth/login.php");
     exit;
 }
 
-// Vérifier si l'utilisateur doit changer son mot de passe
 if (isset($_SESSION['change_password']) && $_SESSION['change_password'] === true) {
     header("Location: pages/auth/change_password.php");
     exit;
@@ -27,7 +25,6 @@ if (isset($_SESSION['change_password']) && $_SESSION['change_password'] === true
             background-color: #f8f9fa;
         }
 
-        /* Sidebar fixée */
         .sidebar {
             width: 250px;
             height: 100vh;
@@ -49,9 +46,8 @@ if (isset($_SESSION['change_password']) && $_SESSION['change_password'] === true
             background-color: rgba(255, 255, 255, 0.1);
         }
 
-        /* Ajustement du contenu principal */
         .main-content {
-            margin-left: 260px; /* Pour éviter le chevauchement */
+            margin-left: 260px;
             padding: 20px;
         }
     </style>
@@ -59,10 +55,8 @@ if (isset($_SESSION['change_password']) && $_SESSION['change_password'] === true
 
 <body>
 
-    <!-- Sidebar -->
     <?php require_once 'shared/sidebar.php'; ?>
 
-    <!-- Contenu principal -->
     <div class="main-content">
         <div class="text-center mb-4">
             <h1 class="display-4 text-primary"> Gestion des Bus</h1>

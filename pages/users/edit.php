@@ -3,23 +3,20 @@ require_once dirname(__DIR__, 2) . '/database.php';
 
 $id = $_GET['id'] ?? null;
 
-// Vérifier si l'ID est bien fourni
 if (!$id || !is_numeric($id)) {
     header("Location: /Gestion_des_bus_PHP/index.php?action=listeUsers");
     exit;
 }
 
-// Récupérer les informations de l'utilisateur
 $result = $connexion->query("SELECT * FROM users WHERE id = $id");
 $user = $result->fetch_assoc();
 
-// Vérifier si l'utilisateur existe
+
 if (!$user) {
     header("Location: /Gestion_des_bus_PHP/index.php?action=listeUsers&error=notfound");
     exit;
 }
 
-// Gérer la soumission du formulaire
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $prenom = trim($_POST['prenom']);
     $nom = trim($_POST['nom']);
@@ -27,12 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $telephone = trim($_POST['telephone']);
     $role = $_POST['role'];
 
-    // Mettre à jour l'utilisateur
     $stmt = $connexion->prepare("UPDATE users SET prenom=?, nom=?, email=?, telephone=?, role=? WHERE id=?");
     $stmt->bind_param("sssssi", $prenom, $nom, $email, $telephone, $role, $id);
     $stmt->execute();
 
-    // Rediriger vers la liste des utilisateurs avec un message de succès
     header("Location: /Gestion_des_bus_PHP/index.php?action=listeUsers&success=edit");
     exit;
 }
