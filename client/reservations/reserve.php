@@ -14,22 +14,22 @@ $success = "";
 $lignes = $connexion->query("SELECT id, numero, tarif FROM lignes ORDER BY numero ASC");
 
 // Réservation du ticket
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ligne_id'], $_POST['trajet_type'], $_POST['date'])) {
     $client_id = $_SESSION['client_id'];
-    $ligne_id = $_POST['ligne_id'];
-    $trajet_type = $_POST['trajet_type'];
+    $ligne_id = (int) $_POST['ligne_id'];
+    $trajet_type = htmlspecialchars($_POST['trajet_type']);
     $date = $_POST['date'];
 
-    // Vérifier si la ligne existe
     $ligne_check = $connexion->prepare("SELECT id FROM lignes WHERE id = ?");
     $ligne_check->bind_param("i", $ligne_id);
     $ligne_check->execute();
+
     if ($ligne_check->get_result()->num_rows == 0) {
         $error = "❌ Ligne invalide.";
     } else {
-        // Insérer la réservation
         $stmt = $connexion->prepare("INSERT INTO reservations (client_id, ligne_id, type, date, created_at) VALUES (?, ?, ?, ?, NOW())");
         $stmt->bind_param("iiss", $client_id, $ligne_id, $trajet_type, $date);
+        
         if ($stmt->execute()) {
             $success = "✅ Réservation effectuée avec succès !";
         } else {
@@ -54,6 +54,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="alert alert-danger"><?= $error ?></div>
         <?php elseif (!empty($success)): ?>
             <div class="alert alert-success"><?= $success ?></div>
+            <div class="text-center mt-3">
+                <a href="../index.php" class="btn btn-success">🏠 Retour au Tableau de Bord</a>
+            </div>
         <?php endif; ?>
 
         <form method="POST">

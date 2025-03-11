@@ -9,7 +9,6 @@ if (!isset($_SESSION['client_id'])) {
 
 $client_id = $_SESSION['client_id'];
 
-// Récupérer les réservations du client
 $sql = "SELECT reservations.id, reservations.date, reservations.type, lignes.numero AS ligne_numero, lignes.tarif
         FROM reservations
         JOIN lignes ON reservations.ligne_id = lignes.id
@@ -59,7 +58,14 @@ $reservations = $stmt->get_result();
             <p class="text-center text-muted">😕 Aucune réservation effectuée.</p>
         <?php endif; ?>
 
-        <p class="mt-3 text-center"><a href="reserve.php">🎟️ Réserver un nouveau ticket</a></p>
+        <p class="mt-3 text-center">
+            <a href="reserve.php" class="btn btn-primary">🎟️ Réserver un nouveau ticket</a>
+        </p>
+
+        <!-- 🔥 Ajout du bouton de retour vers `index.php` -->
+        <p class="mt-3 text-center">
+            <a href="../index.php" class="btn btn-success">🏠 Retour au Tableau de Bord</a>
+        </p>
     </div>
 </body>
 </html>

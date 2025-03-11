@@ -2,7 +2,7 @@
 require_once '../../database.php';
 $error = "";
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['prenom'], $_POST['nom'], $_POST['email'], $_POST['telephone'], $_POST['password'])) {
     $prenom = trim($_POST['prenom']);
     $nom = trim($_POST['nom']);
     $email = trim($_POST['email']);
@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $stmt = $connexion->prepare("INSERT INTO clients (prenom, nom, email, telephone, password) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("sssss", $prenom, $nom, $email, $telephone, $password);
+        
         if ($stmt->execute()) {
             header("Location: login.php?success=registered");
             exit;
@@ -23,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="fr">

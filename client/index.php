@@ -1,7 +1,12 @@
 <?php
-session_start();
+// Vérifie si la session est active avant de l'initialiser
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../database.php';
 
+// Vérifier si le client est bien connecté
 if (!isset($_SESSION['client_id'])) {
     header("Location: auth/login.php");
     exit;
@@ -10,17 +15,29 @@ if (!isset($_SESSION['client_id'])) {
 $client_id = $_SESSION['client_id'];
 $prenom = htmlspecialchars($_SESSION['prenom']);
 
-// Récupérer le nombre total de réservations du client
+// 🔹 Initialiser la variable à 0 pour éviter les erreurs si la requête échoue
+$total_reservations = 0;
+
+// 🔹 Récupérer le nombre total de réservations du client
 $sql = "SELECT COUNT(*) AS total_reservations FROM reservations WHERE client_id = ?";
 $stmt = $connexion->prepare($sql);
-$stmt->bind_param("i", $client_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$data = $result->fetch_assoc();
-$total_reservations = $data['total_reservations'];
 
-// Définition d'une image de profil par défaut
-$profile_image = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] : "default-profile.png";
+if ($stmt) {
+    $stmt->bind_param("i", $client_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = $result->fetch_assoc();
+    $stmt->close();
+
+    // Vérifier si la requête a retourné une valeur
+    if ($data && isset($data['total_reservations'])) {
+        $total_reservations = $data['total_reservations'];
+    }
+}
+
+// Définition du chemin de l'image de profil
+$profile_image = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] : "default.png";
+$image_path = "../assets/" . (file_exists(dirname(__DIR__, 2) . "/assets/" . $profile_image) ? htmlspecialchars($profile_image) : "default.png");
 ?>
 
 <!DOCTYPE html>
@@ -36,8 +53,12 @@ $profile_image = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] 
             background: linear-gradient(135deg, #007bff, #6610f2);
             color: white;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .navbar {
+            width: 100%;
             background-color: rgba(0, 0, 0, 0.7);
         }
         .card {
@@ -54,6 +75,11 @@ $profile_image = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] 
             border-radius: 50%;
             border: 2px solid white;
         }
+        .dashboard-container {
+            width: 90%;
+            max-width: 800px;
+            margin-top: 50px;
+        }
     </style>
 </head>
 <body>
@@ -63,7 +89,7 @@ $profile_image = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] 
         <div class="container">
             <a class="navbar-brand" href="#"><i class="fas fa-bus"></i> Gestion Bus</a>
             <div class="d-flex align-items-center">
-                <img src="../assets/<?= $profile_image ?>" class="profile-img me-2" alt="Photo de profil">
+                <img src="<?= $image_path ?>" class="profile-img me-2" alt="Photo de profil de <?= $prenom ?>">
                 <span class="fw-bold"><?= $prenom ?></span>
                 <a href="auth/logout.php" class="btn btn-danger ms-3"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
             </div>
@@ -71,7 +97,7 @@ $profile_image = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] 
     </nav>
 
     <!-- Contenu principal -->
-    <div class="container mt-5">
+    <div class="dashboard-container">
         <h2 class="text-center fw-bold">🚍 Bienvenue, <?= $prenom ?> !</h2>
         <p class="text-center text-light">Votre tableau de bord client</p>
 
