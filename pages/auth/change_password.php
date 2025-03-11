@@ -1,29 +1,59 @@
 <?php
 session_start();
-require_once dirname(__DIR__, 2) . '/database.php';
+require_once '../../database.php';
 
-if (!isset($_SESSION['user_id']) || !$_SESSION['change_password']) {
-    header("Location: /Gestion_des_bus_PHP/index.php");
+// Vérifier si l'utilisateur est connecté (Admin ou Client)
+if (!isset($_SESSION['user_id']) && !isset($_SESSION['client_id'])) {
+    header("Location: login.php");
+    exit;
+}
+
+// Vérifier si l'utilisateur doit changer son mot de passe
+if (!isset($_SESSION['change_password']) || !$_SESSION['change_password']) {
+    if (isset($_SESSION['user_id'])) {
+        header("Location: ../../index.php");
+    } else {
+        header("Location: ../../client/index.php");
+    }
     exit;
 }
 
 $error = "";
 
+// Vérifier si le formulaire a été soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $new_password = $_POST['new_password'];
-    $confirm_password = $_POST['confirm_password'];
+    $new_password = trim($_POST['new_password']);
+    $confirm_password = trim($_POST['confirm_password']);
 
     if ($new_password !== $confirm_password) {
         $error = "❌ Les mots de passe ne correspondent pas.";
+    } elseif (strlen($new_password) < 6) {
+        $error = "❌ Le mot de passe doit contenir au moins 6 caractères.";
     } else {
+        // Hachage du mot de passe
         $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
 
-        $stmt = $connexion->prepare("UPDATE users SET password = ? WHERE id = ?");
-        $stmt->bind_param("si", $hashed_password, $_SESSION['user_id']);
-        $stmt->execute();
+        if (isset($_SESSION['user_id'])) {
+            // Mise à jour du mot de passe pour les ADMINs et RESPONSABLES
+            $stmt = $connexion->prepare("UPDATE users SET password = ? WHERE id = ?");
+            $stmt->bind_param("si", $hashed_password, $_SESSION['user_id']);
+            $stmt->execute();
+        } elseif (isset($_SESSION['client_id'])) {
+            // Mise à jour du mot de passe pour les CLIENTS
+            $stmt = $connexion->prepare("UPDATE clients SET password = ? WHERE id = ?");
+            $stmt->bind_param("si", $hashed_password, $_SESSION['client_id']);
+            $stmt->execute();
+        }
 
+        // Désactiver l'obligation de changement de mot de passe
         $_SESSION['change_password'] = false;
-        header("Location: /Gestion_des_bus_PHP/index.php");
+
+        // Rediriger selon le rôle de l'utilisateur
+        if (isset($_SESSION['user_id'])) {
+            header("Location: ../../index.php");
+        } else {
+            header("Location: ../../client/index.php");
+        }
         exit;
     }
 }
@@ -40,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <style>
         body {
-            background-color: #ffffff;
+            background-color: #f8f9fa;
             display: flex;
             justify-content: center;
             align-items: center;
