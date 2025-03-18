@@ -1,35 +1,46 @@
 <?php
 session_start();
-ob_start(); // Démarrer la capture de sortie pour éviter les erreurs d'envoi de headers
+ob_start();
 require_once 'database.php';
 
-// Vérifier si l'utilisateur souhaite se déconnecter
+// 🔒 Vérification de l'authentification
+if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
+    header("Location: pages/auth/login.php");
+    exit;
+}
+
+// 🔄 Gestion de la déconnexion
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
     header("Location: pages/auth/login.php");
     exit;
 }
 
-// Vérifier l'authentification avant toute sortie
-if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-    header("Location: pages/auth/login.php");
-    exit;
-}
-
+// 🔄 Redirection si changement de mot de passe requis
 if (isset($_SESSION['change_password']) && $_SESSION['change_password'] === true) {
     header("Location: pages/auth/change_password.php");
     exit;
 }
 
-// Récupération des statistiques globales
+// 📊 Récupération des statistiques globales
 $stats = [
     "bus" => $connexion->query("SELECT COUNT(*) AS total FROM bus")->fetch_assoc()['total'],
     "conducteurs" => $connexion->query("SELECT COUNT(*) AS total FROM conducteurs")->fetch_assoc()['total'],
     "lignes" => $connexion->query("SELECT COUNT(*) AS total FROM lignes")->fetch_assoc()['total'],
-    "stations" => $connexion->query("SELECT COUNT(*) AS total FROM stations")->fetch_assoc()['total'],
     "trajets" => $connexion->query("SELECT COUNT(*) AS total FROM trajets")->fetch_assoc()['total']
 ];
 
+// 📊 Tickets vendus par mois (pour Chart.js) - Données fictives pour le graphique
+$mois = [
+    '2024-10', '2024-11', '2024-12', '2025-01', '2025-02', '2025-03'
+];
+$nbreTickets = [
+    300, 420, 350, 480, 550, 600  // Tickets vendus, avec des variations réalistes
+];
+
+// 🏆 Lignes les plus rentables (pour Chart.js) - Limité aux 5 premières lignes les plus rentables
+$lignes = ["Ligne 1", "Ligne 2", "Ligne 3", "Ligne 4", "Ligne 5"];
+$revenus = [500, 420, 350, 300, 250]; // Revenus par ligne (fictifs)
 ?>
 
 <!DOCTYPE html>
@@ -40,6 +51,7 @@ $stats = [
     <title>Gestion des Bus</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <!-- Intégration Chart.js -->
     <style>
         body {
             background-color: #ffffff;
@@ -73,6 +85,10 @@ $stats = [
         .stat-card h2 {
             font-size: 24px;
         }
+        canvas {
+            max-width: 100% !important;
+            height: 300px !important; /* Assure que tous les graphiques ont la même hauteur */
+        }
     </style>
 </head>
 
@@ -86,104 +102,73 @@ $stats = [
             <p class="lead">Gérez efficacement les bus, conducteurs, trajets et utilisateurs.</p>
         </div>
 
-        <!-- Statistiques Globales -->
+        <!-- Affichage du message de bienvenue uniquement si aucune action n'est définie -->
+        <?php if (!isset($_GET['action'])): ?>
+            <h2 class="text-center">Bienvenue sur la plateforme de gestion des bus !</h2>
+        <?php endif; ?>
+
+        <!-- 📊 Statistiques Globales -->
         <div class="container">
             <div class="stats-container">
-                <div class="card stat-card bg-white text-dark">
-                    <h4 class="text-primary"><i class="fas fa-bus"></i> Bus</h4>
-                    <h2 class="text-success fw-bold"><?= $stats["bus"] ?></h2>
+                <?php foreach ($stats as $key => $value): ?>
+                    <div class="card stat-card bg-white text-dark">
+                        <h4 class="text-primary">
+                            <i class="fas fa-<?= $key === 'bus' ? 'bus' : ($key === 'conducteurs' ? 'user-tie' : ($key === 'trajets' ? 'route' : 'road')) ?>"></i>
+                            <?= ucfirst($key) ?>
+                        </h4>
+                        <h2 class="text-success fw-bold"><?= $value ?></h2>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        </div>
+
+        <!-- 📈 Graphiques -->
+        <div class="container mt-5">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-center">Nombre de Tickets Vendus par Mois</h5>
+                    <canvas id="ticketsChart"></canvas>
                 </div>
-                <div class="card stat-card bg-white text-dark">
-                    <h4 class="text-primary"><i class="fas fa-user-tie"></i> Conducteurs</h4>
-                    <h2 class="text-success fw-bold"><?= $stats["conducteurs"] ?></h2>
-                </div>
-                <div class="card stat-card bg-white text-dark">
-                    <h4 class="text-primary"><i class="fas fa-route"></i> Trajets</h4>
-                    <h2 class="text-success fw-bold"><?= $stats["trajets"] ?></h2>
-                </div>
-                <div class="card stat-card bg-white text-dark">
-                    <h4 class="text-primary"><i class="fas fa-map-marker-alt"></i> Stations</h4>
-                    <h2 class="text-success fw-bold"><?= $stats["stations"] ?></h2>
-                </div>
-                <div class="card stat-card bg-white text-dark">
-                    <h4 class="text-primary"><i class="fas fa-road"></i> Lignes</h4>
-                    <h2 class="text-success fw-bold"><?= $stats["lignes"] ?></h2>
+                <div class="col-md-6">
+                    <h5 class="text-center">Top 5 Lignes les Plus Rentables</h5>
+                    <canvas id="rentabiliteChart"></canvas>
                 </div>
             </div>
         </div>
 
+        <!-- 🔀 Gestion des pages dynamiques -->
         <div class="container-fluid mt-4">
             <div class="row">
                 <div class="col-12">
                     <?php
-                    $action = $_GET['action'] ?? 'home';
-
-                    switch ($action) {
-                        case 'listeBus':
-                            require_once 'pages/bus/liste.php';
-                            break;
-                        case 'addBus':
-                            require_once 'pages/bus/add.php';
-                            break;
-                        case 'editBus':
-                            require_once 'pages/bus/edit.php';
-                            break;
-                        case 'listeConducteurs':
-                            require_once 'pages/conducteurs/liste.php';
-                            break;
-                        case 'addConducteur':
-                            require_once 'pages/conducteurs/add.php';
-                            break;
-                        case 'editConducteur':
-                            require_once 'pages/conducteurs/edit.php';
-                            break;
-                        case 'listeLignes':
-                            require_once 'pages/lignes/liste.php';
-                            break;
-                        case 'addLigne':
-                            require_once 'pages/lignes/add.php';
-                            break;
-                        case 'editLigne':
-                            require_once 'pages/lignes/edit.php';
-                            break;
-                        case 'listeArrets':
-                            require_once 'pages/arrets/liste.php';
-                            break;
-                        case 'addArret':
-                            require_once 'pages/arrets/add.php';
-                            break;
-                        case 'editArret':
-                            require_once 'pages/arrets/edit.php';
-                            break;
-                        case 'listeStations':
-                            require_once 'pages/stations/liste.php';
-                            break;
-                        case 'addStation':
-                            require_once 'pages/stations/add.php';
-                            break;
-                        case 'editStation':
-                            require_once 'pages/stations/edit.php';
-                            break;
-                        case 'listeTrajets':
-                            require_once 'pages/trajets/liste.php';
-                            break;
-                        case 'addTrajet':
-                            require_once 'pages/trajets/add.php';
-                            break;
-                        case 'editTrajet':
-                            require_once 'pages/trajets/edit.php';
-                            break;
-                        case 'listeUsers':
-                            require_once 'pages/users/liste.php';
-                            break;
-                        case 'addUser':
-                            require_once 'pages/users/add.php';
-                            break;
-                        case 'editUser':
-                            require_once 'pages/users/edit.php';
-                            break;
-                        default:
-                            echo '<h2 class="text-center">Bienvenue sur la plateforme de gestion des bus !</h2>';
+                    $action = $_GET['action'] ?? null;
+                    if ($action) {
+                        // Si une action est spécifiée, afficher la page correspondante
+                        $pages = [
+                            'listeBus' => 'pages/bus/liste.php',
+                            'addBus' => 'pages/bus/add.php',
+                            'editBus' => 'pages/bus/edit.php',
+                            'listeConducteurs' => 'pages/conducteurs/liste.php',
+                            'addConducteur' => 'pages/conducteurs/add.php',
+                            'editConducteur' => 'pages/conducteurs/edit.php',
+                            'listeLignes' => 'pages/lignes/liste.php',
+                            'addLigne' => 'pages/lignes/add.php',
+                            'editLigne' => 'pages/lignes/edit.php',
+                            'listeArrets' => 'pages/arrets/liste.php',
+                            'addArret' => 'pages/arrets/add.php',
+                            'editArret' => 'pages/arrets/edit.php',
+                            'listeStations' => 'pages/stations/liste.php',
+                            'addStation' => 'pages/stations/add.php',
+                            'editStation' => 'pages/stations/edit.php',
+                            'listeTrajets' => 'pages/trajets/liste.php',
+                            'addTrajet' => 'pages/trajets/add.php',
+                            'editTrajet' => 'pages/trajets/edit.php',
+                            'listeUsers' => 'pages/users/liste.php',
+                            'addUser' => 'pages/users/add.php',
+                            'editUser' => 'pages/users/edit.php',
+                            'statistiques' => 'pages/stats.php'
+                        ];
+                        require_once $pages[$action] ?? '<h2 class="text-center">Page non trouvée.</h2>';
                     }
                     ?>
                 </div>
@@ -193,5 +178,47 @@ $stats = [
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Chart.js Script -->
+    <script>
+        // 📊 Graphique du nombre de tickets vendus par mois
+        var ctx1 = document.getElementById('ticketsChart').getContext('2d');
+        var ticketsChart = new Chart(ctx1, {
+            type: 'bar', // Le type du graphique (ici, un graphique en barres)
+            data: {
+                labels: <?php echo json_encode($mois); ?>, // Mois (données PHP envoyées en JavaScript)
+                datasets: [{
+                    label: 'Tickets Vendus',
+                    data: <?php echo json_encode($nbreTickets); ?>, // Tickets vendus par mois
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)', // Couleur des barres
+                    borderColor: 'rgba(54, 162, 235, 1)', // Couleur des bordures des barres
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true // L'axe Y commence à zéro
+                    }
+                }
+            }
+        });
+
+        // 📊 Graphique des lignes les plus rentables
+        var ctx2 = document.getElementById('rentabiliteChart').getContext('2d');
+        var rentabiliteChart = new Chart(ctx2, {
+            type: 'pie', // Le type du graphique (ici, un graphique en camembert)
+            data: {
+                labels: <?php echo json_encode($lignes); ?>, // Lignes (données PHP envoyées en JavaScript)
+                datasets: [{
+                    label: 'Revenus par Ligne',
+                    data: <?php echo json_encode($revenus); ?>, // Revenus par ligne
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF9F40', '#4BC0C0'], // Couleurs des secteurs
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+
 </body>
 </html>

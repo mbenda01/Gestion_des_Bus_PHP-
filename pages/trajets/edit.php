@@ -44,9 +44,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!in_array($type, ['Aller', 'Retour'])) {
         $error = "Type de trajet invalide.";
     } elseif ($nbre_tickets <= 0) {
-        $error = "Le nombre de tickets doit être supérieur à 0.";
+        $error = "Le nombre total de tickets doit être supérieur à 0.";
     } elseif ($tickets_vendus < 0 || $tickets_vendus > $nbre_tickets) {
-        $error = "Le nombre de tickets vendus doit être compris entre 0 et le nombre de tickets disponibles.";
+        $error = "Le nombre de tickets vendus doit être compris entre 0 et le nombre total de tickets.";
     } elseif ($ligne_id <= 0 || $bus_id <= 0 || $conducteur_id <= 0) {
         $error = "Veuillez sélectionner des valeurs valides pour la ligne, le bus et le conducteur.";
     }

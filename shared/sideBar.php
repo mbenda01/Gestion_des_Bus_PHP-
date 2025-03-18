@@ -6,31 +6,31 @@
             <ul class="nav flex-column">
                 <?php if ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'Responsable de Trajet'): ?>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="index.php?action=listeBus">🚌 Bus</a>
+                        <a class="nav-link text-light fw-bold" href="index.php?action=listeBus">🚌 Bus</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="index.php?action=listeConducteurs">👨‍✈️ Conducteurs</a>
+                        <a class="nav-link text-light fw-bold" href="index.php?action=listeConducteurs">👨‍✈️ Conducteurs</a>
                     </li>
                 <?php endif; ?>
 
                 <?php if ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'Responsable de Parc'): ?>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="index.php?action=listeLignes">🛣️ Lignes</a>
+                        <a class="nav-link text-light fw-bold" href="index.php?action=listeLignes">🛣️ Lignes</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="index.php?action=listeArrets">🚏 Arrêts</a>
+                        <a class="nav-link text-light fw-bold" href="index.php?action=listeArrets">🚏 Arrêts</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="index.php?action=listeStations">📍 Stations</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-light" href="index.php?action=listeTrajets">🗺️ Trajets</a>
+                        <a class="nav-link text-light fw-bold" href="index.php?action=listeTrajets">🗺️ Trajets</a>
                     </li>
                 <?php endif; ?>
 
                 <?php if ($_SESSION['role'] === 'Admin'): ?>
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="index.php?action=listeUsers">👥 Utilisateurs</a>
+                        <a class="nav-link text-light fw-bold" href="index.php?action=listeUsers">👥 Utilisateurs</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light fw-bold" href="index.php?action=statistiques">📊 Statistiques</a>
                     </li>
                 <?php endif; ?>
             </ul>
@@ -38,16 +38,15 @@
 
         <div class="text-center mt-3">
             <?php
-            $profile_image = isset($_SESSION['profile_image']) && !empty($_SESSION['profile_image'])
+            $profile_image = !empty($_SESSION['profile_image'])
                 ? "/Gestion_des_Bus_PHP/assets/" . $_SESSION['profile_image']
                 : "/Gestion_des_Bus_PHP/assets/default.png";
             ?>
-
             <img src="<?= $profile_image ?>" alt="Photo de profil"
                  class="rounded-circle border border-white" width="60" height="60">
 
             <p class="mt-2"><?= $_SESSION['prenom'] ?? 'Utilisateur' ?></p>
-            <a class="nav-link text-danger fw-bold" href="index.php?action=logout">🚪 Déconnexion</a>
+            <a class="nav-link text-danger fw-bold" href="index.php?action=logout">Déconnexion</a>
         </div>
     </div>
 </div>

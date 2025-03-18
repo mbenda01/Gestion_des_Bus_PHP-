@@ -4,12 +4,17 @@ require_once dirname(__DIR__, 2) . '/database.php';
 $error = "";
 $success = "";
 
+// Récupérer la liste des lignes pour l'association des bus
+$lignes = $connexion->query("SELECT id, numero FROM lignes")->fetch_all(MYSQLI_ASSOC);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $immatriculation = strtoupper(trim($_POST['immatriculation']));
     $type = $_POST['type'];
     $kilometrage = intval($_POST['kilometrage']);
     $nbre_place = intval($_POST['nbre_place']);
     $etat = $_POST['etat'];
+    $ligne_id = intval($_POST['ligne_id']);
+    $localisation = trim($_POST['localisation']);
 
     // Vérification des champs
     if (!preg_match("/^[A-Z0-9-]+$/", $immatriculation)) {
@@ -22,12 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Le nombre de places doit être compris entre 10 et 100.";
     } elseif (!in_array($etat, ['En circulation', 'Hors circulation', 'En panne'])) {
         $error = "État du bus invalide.";
+    } elseif (empty($ligne_id) || !is_numeric($ligne_id)) {
+        $error = "Veuillez sélectionner une ligne valide.";
     }
 
     // Enregistrement si aucune erreur
     if (empty($error)) {
-        $stmt = $connexion->prepare("INSERT INTO bus (immatriculation, type, kilometrage, nbre_place, etat) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssiis", $immatriculation, $type, $kilometrage, $nbre_place, $etat);
+        $stmt = $connexion->prepare("INSERT INTO bus (immatriculation, type, kilometrage, nbre_place, etat, ligne_id, localisation) 
+                                     VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssiisis", $immatriculation, $type, $kilometrage, $nbre_place, $etat, $ligne_id, $localisation);
         if ($stmt->execute()) {
             $success = "✅ Bus ajouté avec succès !";
         } else {
@@ -64,6 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             let immatriculation = document.getElementById('immatriculation').value.trim();
             let kilometrage = document.getElementById('kilometrage').value;
             let nbre_place = document.getElementById('nbre_place').value;
+            let localisation = document.getElementById('localisation').value.trim();
 
             let regexImmatriculation = /^[A-Z0-9-]+$/;
             if (!regexImmatriculation.test(immatriculation)) {
@@ -78,6 +87,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (nbre_place < 10 || nbre_place > 100) {
                 alert("Le nombre de places doit être compris entre 10 et 100.");
+                event.preventDefault();
+                return false;
+            }
+            if (localisation.length === 0) {
+                alert("Veuillez entrer une localisation valide.");
                 event.preventDefault();
                 return false;
             }
@@ -123,6 +137,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <option value="Hors circulation">Hors circulation</option>
                     <option value="En panne">En panne</option>
                 </select>
+            </div>
+            <div class="mb-3">
+                <label for="ligne_id" class="form-label">Ligne associée</label>
+                <select class="form-control" id="ligne_id" name="ligne_id" required>
+                    <option value="">-- Sélectionner une ligne --</option>
+                    <?php foreach ($lignes as $ligne): ?>
+                        <option value="<?= $ligne['id'] ?>">Ligne <?= $ligne['numero'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="localisation" class="form-label">Localisation</label>
+                <input type="text" class="form-control" id="localisation" name="localisation" required>
             </div>
             <button type="submit" class="btn btn-primary w-100">Ajouter</button>
         </form>

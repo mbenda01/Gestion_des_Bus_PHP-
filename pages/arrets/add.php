@@ -11,6 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numero = strtoupper(trim($_POST['numero']));
     $nom = trim($_POST['nom']);
     $ligne_id = intval($_POST['ligne_id']);
+    $zone = trim($_POST['zone']);
 
     // Validation des entrées
     if (!preg_match("/^[A-Z0-9-]+$/", $numero)) {
@@ -19,12 +20,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Le nom de l'arrêt est requis.";
     } elseif ($ligne_id <= 0) {
         $error = "Veuillez sélectionner une ligne valide.";
+    } elseif (empty($zone)) {
+        $error = "Veuillez spécifier une zone pour cet arrêt.";
+    }
+
+    // Vérifier si l'arrêt existe déjà pour cette ligne
+    if (empty($error)) {
+        $stmt = $connexion->prepare("SELECT id FROM arrets WHERE numero = ? AND ligne_id = ?");
+        $stmt->bind_param("si", $numero, $ligne_id);
+        $stmt->execute();
+        $stmt->store_result();
+        if ($stmt->num_rows > 0) {
+            $error = "❌ Cet arrêt existe déjà sur cette ligne.";
+        }
+        $stmt->close();
     }
 
     // Enregistrement si aucune erreur
     if (empty($error)) {
-        $stmt = $connexion->prepare("INSERT INTO arrets (numero, nom, ligne_id) VALUES (?, ?, ?)");
-        $stmt->bind_param("ssi", $numero, $nom, $ligne_id);
+        $stmt = $connexion->prepare("INSERT INTO arrets (numero, nom, ligne_id, zone) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("ssis", $numero, $nom, $ligne_id, $zone);
         
         if ($stmt->execute()) {
             $success = "✅ Arrêt ajouté avec succès !";
@@ -62,9 +77,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <h2 class="text-center text-primary">🚏 Ajouter un Arrêt</h2>
 
         <?php if (!empty($error)): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
+            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php elseif (!empty($success)): ?>
-            <div class="alert alert-success"><?= $success ?></div>
+            <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
         <?php endif; ?>
 
         <form action="#" method="POST">
@@ -81,8 +96,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <select class="form-control" id="ligne_id" name="ligne_id" required>
                     <option value="">Sélectionner une ligne</option>
                     <?php while ($ligne = $lignes->fetch_assoc()): ?>
-                        <option value="<?= $ligne['id'] ?>"><?= htmlspecialchars($ligne['numero']) ?></option>
+                        <option value="<?= $ligne['id'] ?>">Ligne <?= htmlspecialchars($ligne['numero']) ?></option>
                     <?php endwhile; ?>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="zone" class="form-label">Zone</label>
+                <select class="form-control" id="zone" name="zone" required>
+                    <option value="">Sélectionner une zone</option>
+                    <option value="Zone 1">Zone 1</option>
+                    <option value="Zone 2">Zone 2</option>
+                    <option value="Zone 3">Zone 3</option>
+                    <option value="Zone 4">Zone 4</option>
                 </select>
             </div>
             <button type="submit" class="btn btn-primary w-100">Ajouter</button>

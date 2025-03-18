@@ -23,6 +23,9 @@ if (!$bus) {
     exit;
 }
 
+// Récupérer toutes les lignes pour le `select`
+$lignes = $connexion->query("SELECT id, numero FROM lignes")->fetch_all(MYSQLI_ASSOC);
+
 // Mise à jour du bus si le formulaire est soumis
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $immatriculation = strtoupper(trim($_POST['immatriculation']));
@@ -30,6 +33,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $kilometrage = intval($_POST['kilometrage']);
     $nbre_place = intval($_POST['nbre_place']);
     $etat = $_POST['etat'];
+    $ligne_id = intval($_POST['ligne_id']);
+    $localisation = trim($_POST['localisation']);
 
     // Validation des entrées
     if (!preg_match("/^[A-Z0-9-]+$/", $immatriculation)) {
@@ -42,12 +47,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Le nombre de places doit être compris entre 10 et 100.";
     } elseif (!in_array($etat, ['En circulation', 'Hors circulation', 'En panne'])) {
         $error = "État du bus invalide.";
+    } elseif (empty($ligne_id) || !is_numeric($ligne_id)) {
+        $error = "Veuillez sélectionner une ligne valide.";
+    } elseif (empty($localisation)) {
+        $error = "Veuillez entrer une localisation valide.";
     }
 
     // Mise à jour si aucune erreur
     if (empty($error)) {
-        $stmt = $connexion->prepare("UPDATE bus SET immatriculation = ?, type = ?, kilometrage = ?, nbre_place = ?, etat = ? WHERE id = ?");
-        $stmt->bind_param("ssiisi", $immatriculation, $type, $kilometrage, $nbre_place, $etat, $id);
+        $stmt = $connexion->prepare("UPDATE bus 
+                                     SET immatriculation = ?, type = ?, kilometrage = ?, nbre_place = ?, etat = ?, ligne_id = ?, localisation = ? 
+                                     WHERE id = ?");
+        $stmt->bind_param("ssiisisi", $immatriculation, $type, $kilometrage, $nbre_place, $etat, $ligne_id, $localisation, $id);
         
         if ($stmt->execute()) {
             $success = "✅ Bus mis à jour avec succès !";
@@ -57,7 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'type' => $type,
                 'kilometrage' => $kilometrage,
                 'nbre_place' => $nbre_place,
-                'etat' => $etat
+                'etat' => $etat,
+                'ligne_id' => $ligne_id,
+                'localisation' => $localisation
             ];
         } else {
             $error = "❌ Erreur lors de la mise à jour du bus.";
@@ -93,6 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             let immatriculation = document.getElementById('immatriculation').value.trim();
             let kilometrage = document.getElementById('kilometrage').value;
             let nbre_place = document.getElementById('nbre_place').value;
+            let localisation = document.getElementById('localisation').value.trim();
 
             let regexImmatriculation = /^[A-Z0-9-]+$/;
             if (!regexImmatriculation.test(immatriculation)) {
@@ -107,6 +121,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             if (nbre_place < 10 || nbre_place > 100) {
                 alert("Le nombre de places doit être compris entre 10 et 100.");
+                event.preventDefault();
+                return false;
+            }
+            if (localisation.length === 0) {
+                alert("Veuillez entrer une localisation valide.");
                 event.preventDefault();
                 return false;
             }
@@ -138,25 +157,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
             <div class="mb-3">
-                <label for="kilometrage" class="form-label">Kilométrage</label>
-                <input type="number" class="form-control" id="kilometrage" name="kilometrage" value="<?= $bus['kilometrage'] ?>" required>
-            </div>
-            <div class="mb-3">
-                <label for="nbre_place" class="form-label">Nombre de places</label>
-                <input type="number" class="form-control" id="nbre_place" name="nbre_place" value="<?= $bus['nbre_place'] ?>" required>
-            </div>
-            <div class="mb-3">
-                <label for="etat" class="form-label">État du bus</label>
-                <select class="form-control" id="etat" name="etat" required>
-                    <option value="En circulation" <?= $bus['etat'] == 'En circulation' ? 'selected' : '' ?>>En circulation</option>
-                    <option value="Hors circulation" <?= $bus['etat'] == 'Hors circulation' ? 'selected' : '' ?>>Hors circulation</option>
-                    <option value="En panne" <?= $bus['etat'] == 'En panne' ? 'selected' : '' ?>>En panne</option>
+                <label for="ligne_id" class="form-label">Ligne associée</label>
+                <select class="form-control" id="ligne_id" name="ligne_id" required>
+                    <?php foreach ($lignes as $ligne): ?>
+                        <option value="<?= $ligne['id'] ?>" <?= $bus['ligne_id'] == $ligne['id'] ? 'selected' : '' ?>>Ligne <?= $ligne['numero'] ?></option>
+                    <?php endforeach; ?>
                 </select>
+            </div>
+            <div class="mb-3">
+                <label for="localisation" class="form-label">Localisation</label>
+                <input type="text" class="form-control" id="localisation" name="localisation" value="<?= htmlspecialchars($bus['localisation']) ?>" required>
             </div>
             <button type="submit" class="btn btn-warning w-100">Modifier</button>
         </form>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -13,6 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $date = $_POST['date'];
     $type = $_POST['type'];
     $nbre_tickets = intval($_POST['nbre_tickets']);
+    $tickets_vendus = intval($_POST['tickets_vendus']);
     $ligne_id = intval($_POST['ligne_id']);
     $bus_id = intval($_POST['bus_id']);
     $conducteur_id = intval($_POST['conducteur_id']);
@@ -23,15 +24,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!in_array($type, ['Aller', 'Retour'])) {
         $error = "Type de trajet invalide.";
     } elseif ($nbre_tickets <= 0) {
-        $error = "Le nombre de tickets doit être supérieur à 0.";
+        $error = "Le nombre total de tickets doit être supérieur à 0.";
+    } elseif ($tickets_vendus < 0 || $tickets_vendus > $nbre_tickets) {
+        $error = "Le nombre de tickets vendus doit être compris entre 0 et le nombre total de tickets.";
     } elseif ($ligne_id <= 0 || $bus_id <= 0 || $conducteur_id <= 0) {
         $error = "Veuillez sélectionner des valeurs valides pour la ligne, le bus et le conducteur.";
     }
 
     // Enregistrement si aucune erreur
     if (empty($error)) {
-        $stmt = $connexion->prepare("INSERT INTO trajets (date, type, nbre_tickets, ligne_id, bus_id, conducteur_id) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("ssiiii", $date, $type, $nbre_tickets, $ligne_id, $bus_id, $conducteur_id);
+        $stmt = $connexion->prepare("INSERT INTO trajets (date, type, nbre_tickets, tickets_vendus, ligne_id, bus_id, conducteur_id) 
+                                     VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("ssiiiii", $date, $type, $nbre_tickets, $tickets_vendus, $ligne_id, $bus_id, $conducteur_id);
         
         if ($stmt->execute()) {
             $success = "✅ Trajet ajouté avec succès !";
@@ -87,8 +91,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </select>
             </div>
             <div class="mb-3">
-                <label for="nbre_tickets" class="form-label">Nombre de Tickets</label>
+                <label for="nbre_tickets" class="form-label">Nombre total de Tickets</label>
                 <input type="number" class="form-control" id="nbre_tickets" name="nbre_tickets" required>
+            </div>
+            <div class="mb-3">
+                <label for="tickets_vendus" class="form-label">Tickets Vendus</label>
+                <input type="number" class="form-control" id="tickets_vendus" name="tickets_vendus" required>
             </div>
             <div class="mb-3">
                 <label for="ligne_id" class="form-label">Ligne</label>
@@ -102,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-3">
                 <label for="bus_id" class="form-label">Bus</label>
                 <select class="form-control" id="bus_id" name="bus_id" required>
+                    <option value="">Sélectionner un bus</option>
                     <?php while ($busItem = $bus->fetch_assoc()): ?>
                         <option value="<?= $busItem['id'] ?>"><?= htmlspecialchars($busItem['immatriculation']) ?></option>
                     <?php endwhile; ?>
@@ -110,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-3">
                 <label for="conducteur_id" class="form-label">Conducteur</label>
                 <select class="form-control" id="conducteur_id" name="conducteur_id" required>
+                    <option value="">Sélectionner un conducteur</option>
                     <?php while ($conducteur = $conducteurs->fetch_assoc()): ?>
                         <option value="<?= $conducteur['id'] ?>"><?= htmlspecialchars($conducteur['nom_complet']) ?></option>
                     <?php endwhile; ?>

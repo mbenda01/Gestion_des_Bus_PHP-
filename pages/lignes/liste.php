@@ -19,6 +19,16 @@ $lignes = $connexion->query($sql);
         }
         .container {
             margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .table-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -32,31 +42,32 @@ $lignes = $connexion->query($sql);
         <a href="index.php?action=addLigne" class="btn btn-success">+ Ajouter une Ligne</a>
     </div>
 
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Numéro</th>
-                <th>Distance (km)</th>
-                <th>Tarif</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($ligne = $lignes->fetch_assoc()): ?>
+    <!-- Container pour le tableau -->
+    <div class="table-container">
+        <table class="table table-hover table-bordered">
+            <thead class="table-dark">
                 <tr>
-                    <td><?= $ligne['id'] ?></td>
-                    <td><?= htmlspecialchars($ligne['numero']) ?></td>
-                    <td><?= htmlspecialchars($ligne['nombre_kilometre']) ?> km</td>
-                    <td><?= number_format($ligne['tarif'], 2) ?> FCFA</td>
-                    <td>
-                        <a href="index.php?action=editLigne&id=<?= $ligne['id'] ?>" class="btn btn-warning btn-sm">✏️ Modifier</a>
-                        <a href="index.php?action=deleteLigne&id=<?= $ligne['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer cette ligne ?')">🗑️ Supprimer</a>
-                    </td>
+                    <th>ID</th>
+                    <th>Numéro</th>
+                    <th>Distance (km)</th>
+                    <th>Actions</th>
                 </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php while ($ligne = $lignes->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $ligne['id'] ?></td>
+                        <td><?= htmlspecialchars($ligne['numero']) ?></td>
+                        <td><?= htmlspecialchars($ligne['nombre_kilometre']) ?> km</td>
+                        <td>
+                            <a href="index.php?action=editLigne&id=<?= $ligne['id'] ?>" class="btn btn-warning btn-sm">✏️ Modifier</a>
+                            <a href="index.php?action=deleteLigne&id=<?= $ligne['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer cette ligne ?')">🗑️ Supprimer</a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 
 </div>
 

@@ -25,6 +25,16 @@ $buses = $connexion->query($sql);
         }
         .container {
             margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        .table-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -46,39 +56,42 @@ $buses = $connexion->query($sql);
         <a href="index.php?action=addBus" class="btn btn-success">+ Ajouter un Bus</a>
     </div>
 
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Immatriculation</th>
-                <th>Type</th>
-                <th>Kilométrage</th>
-                <th>Places</th>
-                <th>État</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($bus = $buses->fetch_assoc()): ?>
+    <!-- Container pour le tableau -->
+    <div class="table-container">
+        <table class="table table-hover table-bordered">
+            <thead class="table-dark">
                 <tr>
-                    <td><?= $bus['id'] ?></td>
-                    <td><?= htmlspecialchars($bus['immatriculation']) ?></td>
-                    <td><?= htmlspecialchars($bus['type']) ?></td>
-                    <td><?= htmlspecialchars($bus['kilometrage']) ?> km</td>
-                    <td><?= htmlspecialchars($bus['nbre_place']) ?></td>
-                    <td>
-                        <span class="badge bg-<?= $bus['etat'] == 'En circulation' ? 'success' : ($bus['etat'] == 'Hors circulation' ? 'warning' : 'danger') ?>">
-                            <?= $bus['etat'] ?>
-                        </span>
-                    </td>
-                    <td>
-                        <a href="index.php?action=editBus&id=<?= $bus['id'] ?>" class="btn btn-warning btn-sm">✏️ Modifier</a>
-                        <a href="index.php?action=deleteBus&id=<?= $bus['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer ce bus ?')">🗑️ Supprimer</a>
-                    </td>
+                    <th>ID</th>
+                    <th>Immatriculation</th>
+                    <th>Type</th>
+                    <th>Kilométrage</th>
+                    <th>Places</th>
+                    <th>État</th>
+                    <th>Actions</th>
                 </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                <?php while ($bus = $buses->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $bus['id'] ?></td>
+                        <td><?= htmlspecialchars($bus['immatriculation']) ?></td>
+                        <td><?= htmlspecialchars($bus['type']) ?></td>
+                        <td><?= htmlspecialchars($bus['kilometrage']) ?> km</td>
+                        <td><?= htmlspecialchars($bus['nbre_place']) ?></td>
+                        <td>
+                            <span class="badge bg-<?= $bus['etat'] == 'En circulation' ? 'success' : ($bus['etat'] == 'Hors circulation' ? 'warning' : 'danger') ?>">
+                                <?= $bus['etat'] ?>
+                            </span>
+                        </td>
+                        <td>
+                            <a href="index.php?action=editBus&id=<?= $bus['id'] ?>" class="btn btn-warning btn-sm">✏️ Modifier</a>
+                            <a href="index.php?action=deleteBus&id=<?= $bus['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer ce bus ?')">🗑️ Supprimer</a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    </div>
 
 </div>
 

@@ -27,29 +27,25 @@ if (!$ligne) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numero = strtoupper(trim($_POST['numero']));
     $nombre_kilometre = intval($_POST['nombre_kilometre']);
-    $tarif = floatval($_POST['tarif']);
 
     // Validation des entrées
     if (!preg_match("/^[A-Z0-9-]+$/", $numero)) {
         $error = "Le numéro de ligne doit contenir uniquement des lettres, chiffres et tirets.";
     } elseif ($nombre_kilometre <= 0) {
         $error = "Le nombre de kilomètres doit être supérieur à 0.";
-    } elseif ($tarif < 0) {
-        $error = "Le tarif doit être positif.";
     }
 
     // Mise à jour si aucune erreur
     if (empty($error)) {
-        $stmt = $connexion->prepare("UPDATE lignes SET numero = ?, nombre_kilometre = ?, tarif = ? WHERE id = ?");
-        $stmt->bind_param("sidi", $numero, $nombre_kilometre, $tarif, $id);
+        $stmt = $connexion->prepare("UPDATE lignes SET numero = ?, nombre_kilometre = ? WHERE id = ?");
+        $stmt->bind_param("sii", $numero, $nombre_kilometre, $id);
         
         if ($stmt->execute()) {
             $success = "✅ Ligne mise à jour avec succès !";
             // Recharger les données de la ligne après modification
             $ligne = [
                 'numero' => $numero,
-                'nombre_kilometre' => $nombre_kilometre,
-                'tarif' => $tarif
+                'nombre_kilometre' => $nombre_kilometre
             ];
         } else {
             $error = "❌ Erreur lors de la mise à jour de la ligne.";
@@ -70,7 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         body {
             background-color: #f8f9fa;
         }
-
         .container {
             max-width: 500px;
             background: white;
@@ -87,9 +82,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Affichage des messages -->
         <?php if (!empty($error)): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
+            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php elseif (!empty($success)): ?>
-            <div class="alert alert-success"><?= $success ?></div>
+            <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
         <?php endif; ?>
 
         <form action="#" method="POST">
@@ -100,10 +95,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="mb-3">
                 <label for="nombre_kilometre" class="form-label">Nombre de Kilomètres</label>
                 <input type="number" class="form-control" id="nombre_kilometre" name="nombre_kilometre" value="<?= htmlspecialchars($ligne['nombre_kilometre']) ?>" required>
-            </div>
-            <div class="mb-3">
-                <label for="tarif" class="form-label">Tarif</label>
-                <input type="number" step="0.01" class="form-control" id="tarif" name="tarif" value="<?= htmlspecialchars($ligne['tarif']) ?>" required>
             </div>
             <button type="submit" class="btn btn-warning w-100">Modifier</button>
         </form>

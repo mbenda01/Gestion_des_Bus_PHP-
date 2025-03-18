@@ -1,8 +1,8 @@
 <?php
 require_once dirname(__DIR__, 2) . '/database.php';
 
-// Récupérer la liste des arrêts avec les lignes associées
-$sql = "SELECT arrets.id, arrets.numero, arrets.nom, lignes.numero AS ligne_numero 
+// Récupérer la liste des arrêts avec les lignes et les zones associées
+$sql = "SELECT arrets.id, arrets.numero, arrets.nom, arrets.zone, lignes.numero AS ligne_numero 
         FROM arrets 
         JOIN lignes ON arrets.ligne_id = lignes.id 
         ORDER BY lignes.numero, arrets.numero ASC";
@@ -22,6 +22,10 @@ $arrets = $connexion->query($sql);
         }
         .container {
             margin-top: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -32,35 +36,42 @@ $arrets = $connexion->query($sql);
 
     <div class="d-flex justify-content-between mb-3">
         <h5>📋 Nombre total d'arrêts : <strong><?= $arrets->num_rows ?></strong></h5>
-        <a href="index.php?action=addArret" class="btn btn-success">+ Ajouter un Arrêt</a>
+        <a href="index.php?action=addArret" class="btn btn-success">➕ Ajouter un Arrêt</a>
     </div>
 
-    <table class="table table-hover table-bordered">
-        <thead class="table-dark">
-            <tr>
-                <th>ID</th>
-                <th>Numéro de l'Arrêt</th>
-                <th>Nom</th>
-                <th>Ligne Associée</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php while ($arret = $arrets->fetch_assoc()): ?>
+    <?php if ($arrets->num_rows > 0): ?>
+        <table class="table table-hover table-bordered">
+            <thead class="table-dark">
                 <tr>
-                    <td><?= $arret['id'] ?></td>
-                    <td><?= htmlspecialchars($arret['numero']) ?></td>
-                    <td><?= htmlspecialchars($arret['nom']) ?></td>
-                    <td><?= htmlspecialchars($arret['ligne_numero']) ?></td>
-                    <td>
-                        <a href="index.php?action=editArret&id=<?= $arret['id'] ?>" class="btn btn-warning btn-sm">✏️ Modifier</a>
-                        <a href="index.php?action=deleteArret&id=<?= $arret['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer cet arrêt ?')">🗑️ Supprimer</a>
-                    </td>
+                    <th>ID</th>
+                    <th>Numéro de l'Arrêt</th>
+                    <th>Nom</th>
+                    <th>Ligne Associée</th>
+                    <th>Zone</th>
+                    <th>Actions</th>
                 </tr>
-            <?php endwhile; ?>
-        </tbody>
-    </table>
-
+            </thead>
+            <tbody>
+                <?php while ($arret = $arrets->fetch_assoc()): ?>
+                    <tr>
+                        <td><?= $arret['id'] ?></td>
+                        <td><?= htmlspecialchars($arret['numero']) ?></td>
+                        <td><?= htmlspecialchars($arret['nom']) ?></td>
+                        <td>🚏 Ligne <?= htmlspecialchars($arret['ligne_numero']) ?></td>
+                        <td>
+                            <span class="badge bg-info"><?= htmlspecialchars($arret['zone']) ?></span>
+                        </td>
+                        <td>
+                            <a href="index.php?action=editArret&id=<?= $arret['id'] ?>" class="btn btn-warning btn-sm"> Modifier</a>
+                            <a href="index.php?action=deleteArret&id=<?= $arret['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer cet arrêt ?')">Supprimer</a>
+                        </td>
+                    </tr>
+                <?php endwhile; ?>
+            </tbody>
+        </table>
+    <?php else: ?>
+        <div class="alert alert-warning text-center">Aucun arrêt enregistré pour le moment.</div>
+    <?php endif; ?>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

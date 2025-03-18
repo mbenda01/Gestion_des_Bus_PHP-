@@ -31,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $numero = strtoupper(trim($_POST['numero']));
     $nom = trim($_POST['nom']);
     $ligne_id = intval($_POST['ligne_id']);
+    $zone = trim($_POST['zone']);
 
     // Validation des entrées
     if (!preg_match("/^[A-Z0-9-]+$/", $numero)) {
@@ -39,12 +40,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Le nom de l'arrêt est requis.";
     } elseif ($ligne_id <= 0) {
         $error = "Veuillez sélectionner une ligne valide.";
+    } elseif (empty($zone)) {
+        $error = "Veuillez sélectionner une zone valide.";
     }
 
     // Mise à jour si aucune erreur
     if (empty($error)) {
-        $stmt = $connexion->prepare("UPDATE arrets SET numero = ?, nom = ?, ligne_id = ? WHERE id = ?");
-        $stmt->bind_param("ssii", $numero, $nom, $ligne_id, $id);
+        $stmt = $connexion->prepare("UPDATE arrets SET numero = ?, nom = ?, ligne_id = ?, zone = ? WHERE id = ?");
+        $stmt->bind_param("ssisi", $numero, $nom, $ligne_id, $zone, $id);
         
         if ($stmt->execute()) {
             $success = "✅ Arrêt mis à jour avec succès !";
@@ -52,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $arret = [
                 'numero' => $numero,
                 'nom' => $nom,
-                'ligne_id' => $ligne_id
+                'ligne_id' => $ligne_id,
+                'zone' => $zone
             ];
         } else {
             $error = "❌ Erreur lors de la mise à jour de l'arrêt.";
@@ -90,9 +94,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Affichage des messages -->
         <?php if (!empty($error)): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
+            <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
         <?php elseif (!empty($success)): ?>
-            <div class="alert alert-success"><?= $success ?></div>
+            <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
         <?php endif; ?>
 
         <form action="#" method="POST">
@@ -110,9 +114,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <option value="">Sélectionner une ligne</option>
                     <?php while ($ligne = $lignes->fetch_assoc()): ?>
                         <option value="<?= $ligne['id'] ?>" <?= $arret['ligne_id'] == $ligne['id'] ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($ligne['numero']) ?>
+                            Ligne <?= htmlspecialchars($ligne['numero']) ?>
                         </option>
                     <?php endwhile; ?>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="zone" class="form-label">Zone</label>
+                <select class="form-control" id="zone" name="zone" required>
+                    <option value="">Sélectionner une zone</option>
+                    <option value="Zone 1" <?= $arret['zone'] == 'Zone 1' ? 'selected' : '' ?>>Zone 1</option>
+                    <option value="Zone 2" <?= $arret['zone'] == 'Zone 2' ? 'selected' : '' ?>>Zone 2</option>
+                    <option value="Zone 3" <?= $arret['zone'] == 'Zone 3' ? 'selected' : '' ?>>Zone 3</option>
+                    <option value="Zone 4" <?= $arret['zone'] == 'Zone 4' ? 'selected' : '' ?>>Zone 4</option>
                 </select>
             </div>
             <button type="submit" class="btn btn-warning w-100">Modifier</button>
