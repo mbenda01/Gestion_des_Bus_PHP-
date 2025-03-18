@@ -1,3 +1,4 @@
+<!-- reserve.php -->
 <?php
 session_start();
 require_once '../../database.php';
@@ -7,34 +8,20 @@ if (!isset($_SESSION['client_id'])) {
     exit;
 }
 
-$error = "";
-$success = "";
-
 // Récupérer les lignes disponibles
 $lignes = $connexion->query("SELECT id, numero, tarif FROM lignes ORDER BY numero ASC");
 
-// Réservation du ticket
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ligne_id'], $_POST['trajet_type'], $_POST['date'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $client_id = $_SESSION['client_id'];
-    $ligne_id = (int) $_POST['ligne_id'];
-    $trajet_type = htmlspecialchars($_POST['trajet_type']);
+    $ligne_id = $_POST['ligne_id'];
+    $trajet_type = $_POST['trajet_type'];
     $date = $_POST['date'];
 
-    $ligne_check = $connexion->prepare("SELECT id FROM lignes WHERE id = ?");
-    $ligne_check->bind_param("i", $ligne_id);
-    $ligne_check->execute();
-
-    if ($ligne_check->get_result()->num_rows == 0) {
-        $error = "❌ Ligne invalide.";
-    } else {
-        $stmt = $connexion->prepare("INSERT INTO reservations (client_id, ligne_id, type, date, created_at) VALUES (?, ?, ?, ?, NOW())");
-        $stmt->bind_param("iiss", $client_id, $ligne_id, $trajet_type, $date);
-        
-        if ($stmt->execute()) {
-            $success = "✅ Réservation effectuée avec succès !";
-        } else {
-            $error = "❌ Erreur lors de la réservation.";
-        }
+    // Validation et insertion
+    $stmt = $connexion->prepare("INSERT INTO reservations (client_id, ligne_id, type, date) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("iiss", $client_id, $ligne_id, $trajet_type, $date);
+    if ($stmt->execute()) {
+        header("Location: payment.php");
     }
 }
 ?>
@@ -48,42 +35,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ligne_id'], $_POST['t
 </head>
 <body>
     <div class="container mt-5">
-        <h2 class="text-center">🎟️ Réserver un Ticket</h2>
-
-        <?php if (!empty($error)): ?>
-            <div class="alert alert-danger"><?= $error ?></div>
-        <?php elseif (!empty($success)): ?>
-            <div class="alert alert-success"><?= $success ?></div>
-            <div class="text-center mt-3">
-                <a href="../index.php" class="btn btn-success">🏠 Retour au Tableau de Bord</a>
-            </div>
-        <?php endif; ?>
+        <h2 class="text-center">Réservez votre Ticket</h2>
 
         <form method="POST">
             <div class="mb-3">
-                <label class="form-label">Ligne</label>
-                <select class="form-control" name="ligne_id" required>
-                    <option value="">-- Sélectionnez une ligne --</option>
+                <label class="form-label">Sélectionnez une ligne</label>
+                <select class="form-select" name="ligne_id" required>
+                    <option value="">Choisissez une ligne</option>
                     <?php while ($ligne = $lignes->fetch_assoc()): ?>
                         <option value="<?= $ligne['id'] ?>">Ligne <?= htmlspecialchars($ligne['numero']) ?> - Tarif: <?= htmlspecialchars($ligne['tarif']) ?> FCFA</option>
                     <?php endwhile; ?>
                 </select>
             </div>
+
             <div class="mb-3">
                 <label class="form-label">Type de Trajet</label>
-                <select class="form-control" name="trajet_type" required>
+                <select class="form-select" name="trajet_type" required>
                     <option value="Aller">Aller</option>
                     <option value="Retour">Retour</option>
                 </select>
             </div>
+
             <div class="mb-3">
                 <label class="form-label">Date</label>
                 <input type="date" class="form-control" name="date" required>
             </div>
-            <button type="submit" class="btn btn-primary w-100">Réserver</button>
-        </form>
 
-        <p class="mt-3 text-center"><a href="historique.php">📜 Voir mes réservations</a></p>
+            <button type="submit" class="btn btn-primary">Réserver</button>
+        </form>
     </div>
 </body>
 </html>
