@@ -3,12 +3,12 @@ require_once dirname(__DIR__, 1) . '/database.php';
 
 // Récupération des statistiques globales
 $stats = [
-    "bus_en_circulation" => $connexion->query("SELECT COUNT(*) AS total FROM bus WHERE etat = 'En circulation'")->fetch_assoc()['total'],
-    "bus_hors_circulation" => $connexion->query("SELECT COUNT(*) AS total FROM bus WHERE etat = 'Hors circulation'")->fetch_assoc()['total'],
-    "bus_en_panne" => $connexion->query("SELECT COUNT(*) AS total FROM bus WHERE etat = 'En panne'")->fetch_assoc()['total'],
-    "conducteurs" => $connexion->query("SELECT COUNT(*) AS total FROM conducteurs")->fetch_assoc()['total'],
-    "lignes" => $connexion->query("SELECT COUNT(*) AS total FROM lignes")->fetch_assoc()['total'],
-    "trajets" => $connexion->query("SELECT COUNT(*) AS total FROM trajets")->fetch_assoc()['total']
+    "Bus en circulation" => $connexion->query("SELECT COUNT(*) AS total FROM bus WHERE etat = 'En circulation'")->fetch_assoc()['total'],
+    "Bus hors circulation" => $connexion->query("SELECT COUNT(*) AS total FROM bus WHERE etat = 'Hors circulation'")->fetch_assoc()['total'],
+    "Bus en panne" => $connexion->query("SELECT COUNT(*) AS total FROM bus WHERE etat = 'En panne'")->fetch_assoc()['total'],
+    "Conducteurs" => $connexion->query("SELECT COUNT(*) AS total FROM conducteurs")->fetch_assoc()['total'],
+    "Lignes" => $connexion->query("SELECT COUNT(*) AS total FROM lignes")->fetch_assoc()['total'],
+    "Trajets" => $connexion->query("SELECT COUNT(*) AS total FROM trajets")->fetch_assoc()['total']
 ];
 
 // 📊 Tickets vendus par mois (pour Chart.js)
@@ -44,15 +44,20 @@ while ($row = $resultRentable->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistiques - Gestion des Bus</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            background-color: #f8f9fa; /* Gris clair pour le fond de la page */
+            background-color: #f8f9fa;
             font-family: Arial, sans-serif;
         }
 
-        .container {
+        /* Ajout d'une marge pour éviter le chevauchement avec la sidebar */
+        .main-content {
+            margin-left: 220px;
+            padding: 20px;
+        }
+
+        .container-box {
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -61,140 +66,122 @@ while ($row = $resultRentable->fetch_assoc()) {
 
         .stats-container {
             display: flex;
-            justify-content: space-between;
             flex-wrap: wrap;
-            gap: 20px;
+            justify-content: space-between;
+            gap: 15px;
             margin-top: 20px;
         }
 
         .stat-card {
-            width: 23%;
-            background-color: white;
+            flex: 1 1 calc(33% - 20px);
+            background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease-in-out;
             text-align: center;
-        }
-
-        .stat-card:hover {
-            transform: scale(1.05);
+            min-width: 200px;
         }
 
         .stat-card h4 {
-            font-size: 18px;
+            font-size: 16px;
+            color: #007bff;
         }
 
         .stat-card h2 {
-            font-size: 32px;
-            margin: 10px 0;
+            font-size: 28px;
+            color: #28a745;
+            font-weight: bold;
         }
 
         .chart-container {
             display: flex;
+            flex-wrap: wrap;
             justify-content: space-between;
+            gap: 20px;
             margin-top: 30px;
+        }
+
+        .chart-box {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
         }
 
         canvas {
             max-width: 100% !important;
-            height: 300px !important;
+            height: 280px !important;
         }
 
-        /* Responsive adjustments */
         @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+            }
+
+            .stats-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
             .stat-card {
-                width: 48%;
+                width: 90%;
             }
 
             .chart-container {
                 flex-direction: column;
                 align-items: center;
             }
-
-            canvas {
-                height: 250px;
-            }
         }
     </style>
 </head>
 <body>
 
+    <!-- Sidebar déjà existante -->
     <?php require_once 'shared/sideBar.php'; ?>
 
     <div class="main-content">
         <div class="text-center mb-4">
-            <h1 class="display-5 fw-bold text-primary">Statistiques - Gestion des Bus</h1>
-            <p class="lead">Consultez toutes les statistiques liées à la gestion des bus.</p>
+            <h1 class="display-5 fw-bold text-primary">📊 Statistiques - Gestion des Bus</h1>
+            <p class="lead">Analysez les performances des bus et des lignes.</p>
         </div>
 
         <!-- 📊 Statistiques Globales -->
-        <div class="container">
+        <div class="container-box">
             <div class="stats-container">
-                <?php foreach ($stats as $key => $value): ?>
+                <?php foreach ($stats as $titre => $valeur): ?>
                     <div class="stat-card">
-                        <h4 class="text-primary"><?= ucfirst(str_replace('_', ' ', $key)) ?></h4>
-                        <h2 class="text-success fw-bold"><?= $value ?></h2>
-                        <p>Nombre total de <?= str_replace('_', ' ', $key) ?>.</p>
+                        <h4><?= $titre ?></h4>
+                        <h2><?= $valeur ?></h2>
+                        <p>Total <?= strtolower($titre) ?></p>
                     </div>
                 <?php endforeach; ?>
             </div>
         </div>
 
-        <!-- 📈 Graphiques -->
-        <div class="container mt-5">
-            <div class="chart-container">
-                <div class="col-md-6">
-                    <h5 class="text-center">Nombre de Tickets Vendus par Mois</h5>
-                    <canvas id="ticketsChart"></canvas>
-                </div>
-                <div class="col-md-6">
-                    <h5 class="text-center">Top 5 Lignes les Plus Rentables</h5>
-                    <canvas id="rentabiliteChart"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Chart.js Script -->
     <script>
-        // 📊 Graphique du nombre de tickets vendus par mois
         var ctx1 = document.getElementById('ticketsChart').getContext('2d');
         var ticketsChart = new Chart(ctx1, {
-            type: 'bar', // Le type du graphique (ici, un graphique en barres)
+            type: 'bar',
             data: {
-                labels: <?php echo json_encode($mois); ?>, // Mois (données PHP envoyées en JavaScript)
+                labels: <?php echo json_encode($mois); ?>,
                 datasets: [{
                     label: 'Tickets Vendus',
-                    data: <?php echo json_encode($nbreTickets); ?>, // Tickets vendus par mois
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)', // Couleur des barres
-                    borderColor: 'rgba(54, 162, 235, 1)', // Couleur des bordures des barres
+                    data: <?php echo json_encode($nbreTickets); ?>,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
                     borderWidth: 1
                 }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true // L'axe Y commence à zéro
-                    }
-                }
             }
         });
 
-        // 📊 Graphique des lignes les plus rentables
         var ctx2 = document.getElementById('rentabiliteChart').getContext('2d');
         var rentabiliteChart = new Chart(ctx2, {
-            type: 'pie', // Le type du graphique (ici, un graphique en camembert)
+            type: 'pie',
             data: {
-                labels: <?php echo json_encode($lignes); ?>, // Lignes (données PHP envoyées en JavaScript)
+                labels: <?php echo json_encode($lignes); ?>,
                 datasets: [{
-                    label: 'Revenus par Ligne',
-                    data: <?php echo json_encode($revenus); ?>, // Revenus par ligne
-                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF9F40', '#4BC0C0'], // Couleurs des secteurs
-                    borderWidth: 1
+                    data: <?php echo json_encode($revenus); ?>,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#FF9F40', '#4BC0C0']
                 }]
             }
         });
