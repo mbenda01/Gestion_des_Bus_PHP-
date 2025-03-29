@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="assets/styles.css">
     <style>
         body {
-            background: linear-gradient(135deg,rgb(4, 143, 189),rgb(4, 143, 189)); /* Dégradé bleu ciel */
+            background: linear-gradient(to right, #007bff, #6c63ff); /* Dégradé bleu ciel */
             color: #fff;
             display: flex;
             justify-content: center;
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 8px;
         }
         .btn-custom {
-            background:rgb(4, 143, 189);
+            background:linear-gradient(to right, #007bff, #6c63ff);
             color: #fff;
             border-radius: 8px;
             padding: 10px;

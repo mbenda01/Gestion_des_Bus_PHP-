@@ -43,7 +43,7 @@ $reservations = $stmt->get_result();
         .main-content {
             flex-grow: 1;
             padding: 20px;
-            margin-left: 260px; /* Marge pour ne pas chevaucher le sidebar */
+            margin-left: 60px; /* Marge pour ne pas chevaucher le sidebar */
         }
         .container {
             background-color: white;

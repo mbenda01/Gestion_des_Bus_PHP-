@@ -9,7 +9,7 @@ if (!isset($_SESSION['client_id'])) {
 
 $prix = 150; // Prix constant
 $paiement_effectue = isset($_GET['success']) && $_GET['success'] == 'true';
-
+$prenom = $_SESSION['prenom'] ?? "Client";
 ?>
 
 <!DOCTYPE html>
@@ -21,7 +21,7 @@ $paiement_effectue = isset($_GET['success']) && $_GET['success'] == 'true';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #87CEFA, #00BFFF); /* Dégradé bleu ciel */
+            background: linear-gradient(135deg, #87CEFA, #00BFFF);
             color: #fff;
             display: flex;
             justify-content: center;
@@ -53,16 +53,10 @@ $paiement_effectue = isset($_GET['success']) && $_GET['success'] == 'true';
             background: none;
             padding: 10px;
             cursor: pointer;
-            transition: transform 0.2s ease-in-out;
+            transition: transform 0.2s;
         }
         .payment-method button:hover {
             transform: scale(1.1);
-        }
-        .payment-method img {
-            width: 120px;
-            height: auto;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
         .success-message {
             background: #d4edda;
@@ -89,7 +83,6 @@ $paiement_effectue = isset($_GET['success']) && $_GET['success'] == 'true';
             margin-top: 20px;
             background: #f44336;
             color: white;
-            font-weight: bold;
             border-radius: 8px;
             padding: 10px;
             text-decoration: none;
@@ -99,6 +92,18 @@ $paiement_effectue = isset($_GET['success']) && $_GET['success'] == 'true';
         .back-btn:hover {
             background: #c62828;
         }
+        .ticket {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px dashed #007bff;
+        }
+        .ticket img {
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -106,34 +111,39 @@ $paiement_effectue = isset($_GET['success']) && $_GET['success'] == 'true';
     <div class="container">
         <h2 class="mb-4">💳 Paiement du Ticket</h2>
 
-        <!-- Affichage du prix -->
         <p class="price">Montant à payer : <strong><?= $prix ?> FCFA</strong></p>
 
-        <!-- Moyens de paiement -->
         <?php if (!$paiement_effectue): ?>
             <div class="payment-method">
                 <form method="GET">
                     <button type="submit" name="success" value="true">
-                        <img src="../../assets/wave.png" alt="Payer avec Wave">
+                        <img src="../../assets/wave.png" alt="Payer avec Wave" style="width: 120px;">
                     </button>
                 </form>
                 <form method="GET">
                     <button type="submit" name="success" value="true">
-                        <img src="../../assets/OM.png" alt="Payer avec Orange Money">
+                        <img src="../../assets/OM.png" alt="Payer avec Orange Money" style="width: 120px;">
                     </button>
                 </form>
             </div>
         <?php else: ?>
-            <!-- Message de succès -->
             <div class="success-message">
                 ✅ Paiement effectué avec succès ! Vous pouvez télécharger votre ticket ci-dessous.
+            </div>
+
+            <!-- Ticket simulé -->
+            <div class="ticket">
+                <h4>🎟️ Ticket de Transport</h4>
+                <p><strong>Nom : </strong> <?= $prenom ?></p>
+                <p><strong>Date : </strong> <?= date('d-m-Y H:i:s') ?></p>
+                <p><strong>Prix : </strong> <?= $prix ?> FCFA</p>
+                <img src="../../assets/fake_qr.jpg" alt="QR Code Ticket">
             </div>
 
             <!-- Bouton de téléchargement -->
             <a href="download_ticket.php" class="download-btn">📥 Télécharger le ticket</a>
         <?php endif; ?>
 
-        <!-- Bouton Retour -->
         <a href="../index.php" class="back-btn">🏠 Retour à l'accueil</a>
     </div>
 

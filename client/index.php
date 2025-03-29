@@ -1,6 +1,15 @@
 <?php
 session_start();
 require_once '../database.php';
+
+// 🔒 Vérification de la connexion
+if (!isset($_SESSION['client_id'])) {
+    // Redirige vers la page de connexion si l'utilisateur n'est pas connecté
+    header("Location: auth/login.php");
+    exit();
+}
+
+// ✅ Récupération des variables de session
 $client_id = $_SESSION['client_id'];
 $prenom = htmlspecialchars($_SESSION['prenom']);
 ?>
