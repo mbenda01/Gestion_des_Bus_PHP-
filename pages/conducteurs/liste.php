@@ -1,15 +1,9 @@
 <?php
 require_once dirname(__DIR__, 2) . '/database.php';
 
-// Récupérer le filtre d'état depuis l'URL
-$etat = $_GET['etat'] ?? '';
-
-// Construire la requête SQL en fonction du filtre
-$sql = "SELECT * FROM bus";
-if ($etat && in_array($etat, ['En circulation', 'Hors circulation', 'En panne'])) {
-    $sql .= " WHERE etat = '$etat'";
-}
-$buses = $connexion->query($sql);
+// Récupérer les conducteurs depuis la base
+$sql = "SELECT * FROM conducteurs ORDER BY nom ASC";
+$conducteurs = $connexion->query($sql);
 ?>
 
 <!DOCTYPE html>
@@ -17,7 +11,7 @@ $buses = $connexion->query($sql);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Bus</title>
+    <title>Liste des Conducteurs</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -41,60 +35,73 @@ $buses = $connexion->query($sql);
 <body>
 
 <div class="container">
-    <h2 class="text-center text-primary">🚍 Liste des Bus</h2>
+    <h2 class="text-center text-primary">👨‍✈️ Liste des Conducteurs</h2>
 
-    <div class="d-flex justify-content-between mb-3">
-        <form method="GET" class="d-flex">
-            <label for="etat" class="me-2 align-self-center">Filtrer par état :</label>
-            <select name="etat" class="form-select me-2" onchange="this.form.submit()">
-                <option value="">Tous</option>
-                <option value="En circulation" <?= $etat == 'En circulation' ? 'selected' : '' ?>>En circulation</option>
-                <option value="Hors circulation" <?= $etat == 'Hors circulation' ? 'selected' : '' ?>>Hors circulation</option>
-                <option value="En panne" <?= $etat == 'En panne' ? 'selected' : '' ?>>En panne</option>
-            </select>
-        </form>
-        <a href="index.php?action=addBus" class="btn btn-success">+ Ajouter un Bus</a>
+    <!-- Boutons d'action alignés gauche/droite -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="index.php?action=addConducteur" class="btn btn-success">+ Ajouter un Conducteur</a>
+        <button id="downloadPdfBtn" class="btn btn-danger">📄 Télécharger PDF</button>
     </div>
 
-    <!-- Container pour le tableau -->
     <div class="table-container">
         <table class="table table-hover table-bordered">
             <thead class="table-dark">
                 <tr>
                     <th>ID</th>
-                    <th>Immatriculation</th>
-                    <th>Type</th>
-                    <th>Kilométrage</th>
-                    <th>Places</th>
-                    <th>État</th>
+                    <th>Matricule</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Téléphone</th>
+                    <th>Type de permis</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <?php while ($bus = $buses->fetch_assoc()): ?>
+                <?php while ($conducteur = $conducteurs->fetch_assoc()): ?>
                     <tr>
-                        <td><?= $bus['id'] ?></td>
-                        <td><?= htmlspecialchars($bus['immatriculation']) ?></td>
-                        <td><?= htmlspecialchars($bus['type']) ?></td>
-                        <td><?= htmlspecialchars($bus['kilometrage']) ?> km</td>
-                        <td><?= htmlspecialchars($bus['nbre_place']) ?></td>
+                        <td><?= $conducteur['id'] ?></td>
+                        <td><?= htmlspecialchars($conducteur['matricule']) ?></td>
+                        <td><?= htmlspecialchars($conducteur['nom']) ?></td>
+                        <td><?= htmlspecialchars($conducteur['prenom']) ?></td>
+                        <td><?= htmlspecialchars($conducteur['telephone']) ?></td>
+                        <td><?= htmlspecialchars($conducteur['type_permis']) ?></td>
                         <td>
-                            <span class="badge bg-<?= $bus['etat'] == 'En circulation' ? 'success' : ($bus['etat'] == 'Hors circulation' ? 'warning' : 'danger') ?>">
-                                <?= $bus['etat'] ?>
-                            </span>
-                        </td>
-                        <td>
-                            <a href="index.php?action=editBus&id=<?= $bus['id'] ?>" class="btn btn-warning btn-sm">✏️ Modifier</a>
-                            <a href="index.php?action=deleteBus&id=<?= $bus['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer ce bus ?')">🗑️ Supprimer</a>
+                            <a href="index.php?action=editConducteur&id=<?= $conducteur['id'] ?>" class="btn btn-warning btn-sm">✏️ Modifier</a>
+                            <a href="index.php?action=deleteConducteur&id=<?= $conducteur['id'] ?>" class="btn btn-danger btn-sm" onclick="return confirm('Voulez-vous vraiment supprimer ce conducteur ?')">🗑️ Supprimer</a>
                         </td>
                     </tr>
                 <?php endwhile; ?>
             </tbody>
         </table>
     </div>
-
 </div>
 
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-3">Génération du PDF en cours... Veuillez patienter.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('downloadPdfBtn').addEventListener('click', function () {
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+
+        setTimeout(() => {
+            loadingModal.hide();
+            alert("✅ Simulation : Le PDF des conducteurs a été généré avec succès !");
+        }, 3000);
+    });
+</script>
+
 </body>
 </html>

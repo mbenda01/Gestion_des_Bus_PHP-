@@ -1,7 +1,6 @@
 <?php
 require_once dirname(__DIR__, 2) . '/database.php';
 
-// Récupérer la liste des lignes de la base de données
 $sql = "SELECT * FROM lignes ORDER BY numero ASC";
 $lignes = $connexion->query($sql);
 ?>
@@ -37,12 +36,14 @@ $lignes = $connexion->query($sql);
 <div class="container">
     <h2 class="text-center text-primary">🛣️ Liste des Lignes</h2>
 
-    <div class="d-flex justify-content-between mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <h5>📋 Nombre total de lignes : <strong><?= $lignes->num_rows ?></strong></h5>
-        <a href="index.php?action=addLigne" class="btn btn-success">+ Ajouter une Ligne</a>
+        <div>
+            <a href="index.php?action=addLigne" class="btn btn-success me-2">+ Ajouter une Ligne</a>
+            <button id="downloadPdfBtn" class="btn btn-danger">📄 Télécharger PDF</button>
+        </div>
     </div>
 
-    <!-- Container pour le tableau -->
     <div class="table-container">
         <table class="table table-hover table-bordered">
             <thead class="table-dark">
@@ -68,9 +69,34 @@ $lignes = $connexion->query($sql);
             </tbody>
         </table>
     </div>
+</div>
 
+
+<div class="modal fade" id="loadingModal" tabindex="-1" aria-labelledby="loadingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Chargement...</span>
+                </div>
+                <p class="mt-3">Génération du PDF en cours... Veuillez patienter.</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.getElementById('downloadPdfBtn').addEventListener('click', function () {
+        const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+        loadingModal.show();
+
+        setTimeout(() => {
+            loadingModal.hide();
+            alert("✅ Simulation : Le PDF des lignes a été généré avec succès !");
+        }, 3000);
+    });
+</script>
+
 </body>
 </html>
